@@ -4,50 +4,40 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Cliente {
-    private List<Alquiler> alquileres = new ArrayList<Alquiler>();
-    private String name;
+    private List<Alquiler> alquileres = new ArrayList<>();
+    private String nombre;
 
     public Cliente(String nombre) {
-        this.name = nombre;
+        this.nombre = nombre;
     }
 
-    public Object[] calcularDeudaYPuntosObtenidos() {
-        Object[] resultado = new Object[2];
+    public ResumenAlquiler calcularDeudaYPuntosObtenidos() {
         double total = 0;
-        int puntosAlquilerFrecuente = 0;
+        int puntos = 0;
         for (Alquiler alquiler : alquileres) {
-            double monto = 0;
-// determine amounts for each line
-            switch (alquiler.copia().libro().codigoPrecio()) {
-                case Libro.REGULARES:
-                    monto += 2;
-                    if (alquiler.diasAlquilados() > 2)
-                        monto += (alquiler.diasAlquilados() - 2) * 1.5;
-                    break;
-                case Libro.NUEVO_LANZAMIENTO:
-                    monto += alquiler.diasAlquilados() * 3;
-                    break;
-                case Libro.INFANTILES:
-                    monto += 1.5;
-                    if (alquiler.diasAlquilados() > 3)
-                        monto += (alquiler.diasAlquilados() - 3) * 1.5;
-                    break;
-            }
-            total += monto;
-            // sumo puntos por alquiler
-            puntosAlquilerFrecuente++;
-            // bonus por dos días de alquiler de un nuevo lanzamiento
-            if ((alquiler.copia().libro().codigoPrecio() == Libro.NUEVO_LANZAMIENTO)
-                    && alquiler.diasAlquilados() > 1) {
-                puntosAlquilerFrecuente++;
-            }
+            total += alquiler.calcularMonto();
+            puntos += alquiler.calcularPuntos();
         }
-        resultado[0] = total;
-        resultado[1] = puntosAlquilerFrecuente;
-        return resultado;
+        return new ResumenAlquiler(total, puntos);
     }
 
-    public void alquilar(Alquiler rental) {
-        alquileres.add(rental);
+    public void alquilar(Alquiler alquiler) {
+        alquileres.add(alquiler);
+    }
+
+    public String nombre() {
+        return nombre;
+    }
+
+    // Clase auxiliar para encapsular el resultado
+    public static class ResumenAlquiler {
+        private final double montoTotal;
+        private final int puntos;
+        public ResumenAlquiler(double montoTotal, int puntos) {
+            this.montoTotal = montoTotal;
+            this.puntos = puntos;
+        }
+        public double montoTotal() { return montoTotal; }
+        public int puntos() { return puntos; }
     }
 }

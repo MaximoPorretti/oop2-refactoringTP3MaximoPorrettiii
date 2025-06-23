@@ -3,49 +3,117 @@ package oop2.tp3.ejercicio3;
 import java.time.LocalDate;
 import java.util.List;
 
-enum TipoDeGasto {
-    CENA, DESAYUNO, ALQUILER_AUTO
+abstract class Gasto {
+    private final int monto;
+
+    protected Gasto(int monto) {
+        this.monto = monto;
+    }
+
+    public int getMonto() {
+        return monto;
+    }
+
+    public abstract String getNombre();
+    public abstract boolean esGastoDeComida();
+    public abstract boolean excedeLimite();
 }
 
-class Gasto {
-    TipoDeGasto tipoGasto;
-    int monto;
+class GastoCena extends Gasto {
+    private static final int LIMITE = 5000;
+
+    public GastoCena(int monto) {
+        super(monto);
+    }
+
+    @Override
+    public String getNombre() {
+        return "Cena";
+    }
+
+    @Override
+    public boolean esGastoDeComida() {
+        return true;
+    }
+
+    @Override
+    public boolean excedeLimite() {
+        return getMonto() > LIMITE;
+    }
+}
+
+class GastoDesayuno extends Gasto {
+    private static final int LIMITE = 1000;
+
+    public GastoDesayuno(int monto) {
+        super(monto);
+    }
+
+    @Override
+    public String getNombre() {
+        return "Desayuno";
+    }
+
+    @Override
+    public boolean esGastoDeComida() {
+        return true;
+    }
+
+    @Override
+    public boolean excedeLimite() {
+        return getMonto() > LIMITE;
+    }
+}
+
+class GastoAlquilerAuto extends Gasto {
+    public GastoAlquilerAuto(int monto) {
+        super(monto);
+    }
+
+    @Override
+    public String getNombre() {
+        return "Alquiler de Autos";
+    }
+
+    @Override
+    public boolean esGastoDeComida() {
+        return false;
+    }
+
+    @Override
+    public boolean excedeLimite() {
+        return false;
+    }
 }
 
 public class ReporteDeGastos {
-    public void imprimir(List<Gasto> gastos) {
+    public String generarReporte(List<Gasto> gastos) {
+        StringBuilder reporte = new StringBuilder();
         int total = 0;
         int gastosDeComida = 0;
 
-        System.out.println("Expenses " + LocalDate.now());
+        reporte.append("Expenses ").append(LocalDate.now()).append("\n");
 
         for (Gasto gasto : gastos) {
-            if (gasto.tipoGasto == TipoDeGasto.CENA || gasto.tipoGasto == TipoDeGasto.DESAYUNO) {
-                gastosDeComida += gasto.monto;
+            if (gasto.esGastoDeComida()) {
+                gastosDeComida += gasto.getMonto();
             }
 
-            String nombreGasto = "";
-            switch (gasto.tipoGasto) {
-                case CENA:
-                    nombreGasto = "Cena";
-                    break;
-                case DESAYUNO:
-                    nombreGasto = "Desayuno";
-                    break;
-                case ALQUILER_AUTO:
-                    nombreGasto = "Alquiler de Autos";
-                    break;
-            }
+            String marcaExcesoComidas = gasto.excedeLimite() ? "X" : " ";
 
-            String marcaExcesoComidas = gasto.tipoGasto == TipoDeGasto.CENA && gasto.monto > 5000
-                    || gasto.tipoGasto == TipoDeGasto.DESAYUNO && gasto.monto > 1000 ? "X" : " ";
+            reporte.append(gasto.getNombre())
+                  .append("\t")
+                  .append(gasto.getMonto())
+                  .append("\t")
+                  .append(marcaExcesoComidas)
+                  .append("\n");
 
-            System.out.println(nombreGasto + "\t" + gasto.monto + "\t" + marcaExcesoComidas);
-
-            total += gasto.monto;
+            total += gasto.getMonto();
         }
 
-        System.out.println("Gastos de comida: " + gastosDeComida);
-        System.out.println("Total de gastos: " + total);
+        reporte.append("Gastos de comida: ").append(gastosDeComida).append("\n");
+        reporte.append("Total de gastos: ").append(total);
+
+        return reporte.toString();
     }
 }

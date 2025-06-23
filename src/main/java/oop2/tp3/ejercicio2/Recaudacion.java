@@ -1,88 +1,70 @@
 package oop2.tp3.ejercicio2;
 
 import com.opencsv.CSVReader;
-
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Recaudacion {
-    public static List<Map<String, String>> where(Map<String, String> options)
-            throws IOException {
-        List<String[]> csvData = new ArrayList<String[]>();
-        CSVReader reader = new CSVReader(new FileReader("src/main/resources/data.csv"));
-        String[] row = null;
+    private static List<String[]> csvData;
+    private static final String[] CAMPOS = {"permalink", "company_name", "number_employees", "category", "city", "state", "funded_date", "raised_amount", "raised_currency", "round"};
+    private static final Map<String, Integer> INDICES = Map.of(
+            "company_name", 1,
+            "city", 4,
+            "state", 5,
+            "round", 9
+    );
 
-        while ((row = reader.readNext()) != null) {
-            csvData.add(row);
+    static {
+        try {
+            csvData = new CsvReader().leerCsv("src/main/resources/data.csv");
+        } catch (IOException e) {
+            csvData = List.of(); // Lista vacía si hay error
+            e.printStackTrace();
         }
+    }
 
-        reader.close();
-        csvData.remove(0);
-
-        if (options.containsKey("company_name")) {
-            List<String[]> results = new ArrayList<String[]>();
-
-            for (int i = 0; i < csvData.size(); i++) {
-                if (csvData.get(i)[1].equals(options.get("company_name"))) {
-                    results.add(csvData.get(i));
-                }
+    public static List<Map<String, String>> where(Map<String, String> options) {
+        List<String[]> filtrados = new ArrayList<>(csvData);
+        for (var entry : options.entrySet()) {
+            if (INDICES.containsKey(entry.getKey())) {
+                filtrados = filtrar(filtrados, INDICES.get(entry.getKey()), entry.getValue());
             }
-            csvData = results;
         }
-
-        if (options.containsKey("city")) {
-            List<String[]> results = new ArrayList<String[]>();
-
-            for (int i = 0; i < csvData.size(); i++) {
-                if (csvData.get(i)[4].equals(options.get("city"))) {
-                    results.add(csvData.get(i));
-                }
+        List<Map<String, String>> output = new ArrayList<>();
+        for (String[] fila : filtrados) {
+            Map<String, String> mapped = new HashMap<>();
+            for (int i = 0; i < CAMPOS.length; i++) {
+                mapped.put(CAMPOS[i], fila[i]);
             }
-            csvData = results;
-        }
-
-        if (options.containsKey("state")) {
-            List<String[]> results = new ArrayList<String[]>();
-
-            for (int i = 0; i < csvData.size(); i++) {
-                if (csvData.get(i)[5].equals(options.get("state"))) {
-                    results.add(csvData.get(i));
-                }
-            }
-            csvData = results;
-        }
-
-        if (options.containsKey("round")) {
-            List<String[]> results = new ArrayList<String[]>();
-
-            for (int i = 0; i < csvData.size(); i++) {
-                if (csvData.get(i)[9].equals(options.get("round"))) {
-                    results.add(csvData.get(i));
-                }
-            }
-            csvData = results;
-        }
-
-        List<Map<String, String>> output = new ArrayList<Map<String, String>>();
-
-        for (int i = 0; i < csvData.size(); i++) {
-            Map<String, String> mapped = new HashMap<String, String>();
-            mapped.put("permalink", csvData.get(i)[0]);
-            mapped.put("company_name", csvData.get(i)[1]);
-            mapped.put("number_employees", csvData.get(i)[2]);
-            mapped.put("category", csvData.get(i)[3]);
-            mapped.put("city", csvData.get(i)[4]);
-            mapped.put("state", csvData.get(i)[5]);
-            mapped.put("funded_date", csvData.get(i)[6]);
-            mapped.put("raised_amount", csvData.get(i)[7]);
-            mapped.put("raised_currency", csvData.get(i)[8]);
-            mapped.put("round", csvData.get(i)[9]);
             output.add(mapped);
         }
         return output;
+    }
+
+    private static List<String[]> filtrar(List<String[]> datos, int indice, String valor) {
+        List<String[]> results = new ArrayList<>();
+        for (String[] fila : datos) {
+            if (fila[indice].equals(valor)) {
+                results.add(fila);
+            }
+        }
+        return results;
+    }
+
+    // Clase interna para lectura de CSV
+    private static class CsvReader {
+        public List<String[]> leerCsv(String path) throws IOException {
+            List<String[]> data = new ArrayList<>();
+            try (CSVReader reader = new CSVReader(new FileReader(path))) {
+                String[] row;
+                boolean first = true;
+                while ((row = reader.readNext()) != null) {
+                    if (first) { first = false; continue; } // Saltar encabezado
+                    data.add(row);
+                }
+            }
+            return data;
+        }
     }
 }
