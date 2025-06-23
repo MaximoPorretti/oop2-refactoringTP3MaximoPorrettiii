@@ -15,7 +15,9 @@ abstract class Gasto {
     }
 
     public abstract String getNombre();
+
     public abstract boolean esGastoDeComida();
+
     public abstract boolean excedeLimite();
 }
 
@@ -66,6 +68,7 @@ class GastoDesayuno extends Gasto {
 }
 
 class GastoAlquilerAuto extends Gasto {
+
     public GastoAlquilerAuto(int monto) {
         super(monto);
     }
@@ -87,6 +90,7 @@ class GastoAlquilerAuto extends Gasto {
 }
 
 public class ReporteDeGastos {
+
     public String generarReporte(List<Gasto> gastos) {
         StringBuilder reporte = new StringBuilder();
         int total = 0;
@@ -102,11 +106,11 @@ public class ReporteDeGastos {
             String marcaExcesoComidas = gasto.excedeLimite() ? "X" : " ";
 
             reporte.append(gasto.getNombre())
-                  .append("\t")
-                  .append(gasto.getMonto())
-                  .append("\t")
-                  .append(marcaExcesoComidas)
-                  .append("\n");
+                    .append("\t")
+                    .append(gasto.getMonto())
+                    .append("\t")
+                    .append(marcaExcesoComidas)
+                    .append("\n");
 
             total += gasto.getMonto();
         }

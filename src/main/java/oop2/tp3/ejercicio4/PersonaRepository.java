@@ -13,10 +13,6 @@ public class PersonaRepository {
         this.jdbi = jdbi;
     }
 
-    /**
-     * Busca por nombre o parte del nombre.
-     * Retorna una lista vacía si no hay coincidencias.
-     */
     public List<Persona> buscarPorNombre(String nombreOParte) {
         return jdbi.withHandle(handle -> {
             var rs = handle
@@ -37,10 +33,7 @@ public class PersonaRepository {
         });
     }
 
-    /**
-     * Busca una persona por su ID.
-     * Retorna Optional.empty() si no se encuentra.
-     */
+
     public Optional<Persona> buscarId(Long id) {
         return jdbi.withHandle(handle -> {
             var rs = handle

@@ -6,65 +6,74 @@ import java.io.IOException;
 import java.util.*;
 
 public class Recaudacion {
-    private static List<String[]> csvData;
-    private static final String[] CAMPOS = {"permalink", "company_name", "number_employees", "category", "city", "state", "funded_date", "raised_amount", "raised_currency", "round"};
-    private static final Map<String, Integer> INDICES = Map.of(
-            "company_name", 1,
-            "city", 4,
-            "state", 5,
-            "round", 9
+
+    private final List<String[]> datos;
+
+    private static final List<String> CAMPOS = List.of(
+            "permalink", "company_name", "number_employees", "category", "city",
+            "state", "funded_date", "raised_amount", "raised_currency", "round"
     );
 
-    static {
-        try {
-            csvData = new CsvReader().leerCsv("src/main/resources/data.csv");
-        } catch (IOException e) {
-            csvData = List.of(); // Lista vacía si hay error
-            e.printStackTrace();
-        }
+    private static final Map<String, Integer> CAMPOS_FILTRABLES = Map.of(
+            "company_name", CAMPOS.indexOf("company_name"),
+            "city", CAMPOS.indexOf("city"),
+            "state", CAMPOS.indexOf("state"),
+            "round", CAMPOS.indexOf("round")
+    );
+
+    public Recaudacion(String pathArchivoCsv) {
+        this.datos = new LectorCsv().leerCsv(pathArchivoCsv);
     }
 
-    public static List<Map<String, String>> where(Map<String, String> options) {
-        List<String[]> filtrados = new ArrayList<>(csvData);
-        for (var entry : options.entrySet()) {
-            if (INDICES.containsKey(entry.getKey())) {
-                filtrados = filtrar(filtrados, INDICES.get(entry.getKey()), entry.getValue());
+    public List<Map<String, String>> where(Map<String, String> filtros) {
+        List<String[]> datosFiltrados = new ArrayList<>(datos);
+        for (Map.Entry<String, String> filtro : filtros.entrySet()) {
+            Integer indice = CAMPOS_FILTRABLES.get(filtro.getKey());
+            if (indice != null) {
+                datosFiltrados = filtrarPorCampo(datosFiltrados, indice, filtro.getValue());
             }
         }
-        List<Map<String, String>> output = new ArrayList<>();
-        for (String[] fila : filtrados) {
-            Map<String, String> mapped = new HashMap<>();
-            for (int i = 0; i < CAMPOS.length; i++) {
-                mapped.put(CAMPOS[i], fila[i]);
-            }
-            output.add(mapped);
-        }
-        return output;
+        return mapearFilas(datosFiltrados);
     }
 
-    private static List<String[]> filtrar(List<String[]> datos, int indice, String valor) {
-        List<String[]> results = new ArrayList<>();
-        for (String[] fila : datos) {
-            if (fila[indice].equals(valor)) {
-                results.add(fila);
-            }
-        }
-        return results;
+    private List<String[]> filtrarPorCampo(List<String[]> datos, int indice, String valor) {
+        return datos.stream()
+                .filter(fila -> fila[indice].equals(valor))
+                .toList();
     }
 
-    // Clase interna para lectura de CSV
-    private static class CsvReader {
-        public List<String[]> leerCsv(String path) throws IOException {
-            List<String[]> data = new ArrayList<>();
+    private List<Map<String, String>> mapearFilas(List<String[]> filas) {
+        return filas.stream()
+                .map(this::mapearFila)
+                .toList();
+    }
+
+    private Map<String, String> mapearFila(String[] fila) {
+        Map<String, String> resultado = new HashMap<>();
+        for (int i = 0; i < CAMPOS.size(); i++) {
+            resultado.put(CAMPOS.get(i), fila[i]);
+        }
+        return resultado;
+    }
+
+    // Clase auxiliar para leer el CSV
+    private static class LectorCsv {
+        public List<String[]> leerCsv(String path) {
+            List<String[]> datos = new ArrayList<>();
             try (CSVReader reader = new CSVReader(new FileReader(path))) {
-                String[] row;
-                boolean first = true;
-                while ((row = reader.readNext()) != null) {
-                    if (first) { first = false; continue; } // Saltar encabezado
-                    data.add(row);
+                String[] fila;
+                boolean primera = true;
+                while ((fila = reader.readNext()) != null) {
+                    if (primera) {
+                        primera = false; // saltar encabezado
+                        continue;
+                    }
+                    datos.add(fila);
                 }
+            } catch (IOException e) {
+                System.err.println("Error al leer el archivo CSV: " + e.getMessage());
             }
-            return data;
+            return datos;
         }
     }
 }
